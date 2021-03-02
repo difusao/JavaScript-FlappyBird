@@ -59,13 +59,13 @@ const medal = {
         let v = score.value;
 
         if (v <= 10) {
-            this.medalha = 0;     // lata            
+            this.medalha = 0;
         } else if (v > 10 && v <= 30) {
-            this.medalha = 1;     // prata
+            this.medalha = 1;
         } else if (v >= 31 && v <= 40) {
-            this.medalha = 2;     // bronse
+            this.medalha = 2;
         } else if (v >= 41) {
-            this.medalha = 3;     // ouro
+            this.medalha = 3;
         }
     },
 };
@@ -89,9 +89,8 @@ const bg = {
     update: function () {
         this.x = this.x - 0.25;
 
-        if (this.x < -275) {
+        if (this.x < -275)
             this.x = 0;
-        }
     }
 };
 
@@ -107,7 +106,6 @@ const fg = {
 
     draw: function () {
         ctx.drawImage(sprite, this.sX, this.sY, this.w, this.h, this.x, this.y, this.w, this.h);
-
         ctx.drawImage(sprite, this.sX, this.sY, this.w, this.h, this.x + this.w, this.y, this.w, this.h);
     },
 
@@ -170,12 +168,12 @@ const pipes = {
             // TOP PIPE
             if (bird.x + bird.radius > p.x && bird.x - bird.radius < p.x + this.w && bird.y + bird.radius > p.y && bird.y - bird.radius < p.y + this.h) {
                 state.current = state.over;
-                //HIT.play();
+                HIT.play();
             }
             // BOTTOM PIPE
             if (bird.x + bird.radius > p.x && bird.x - bird.radius < p.x + this.w && bird.y + bird.radius > bottomPipeYPos && bird.y - bird.radius < bottomPipeYPos + this.h) {
                 state.current = state.over;
-                //HIT.play();
+                HIT.play();
             }
 
             // MOVE THE PIPES TO THE LEFT
@@ -219,47 +217,131 @@ const score = {
             ctx.fillText(this.value, cvs.width / 2, 50);
             ctx.strokeText(this.value, cvs.width / 2, 50);
 
-        } else if (state.current == state.over) {
+        } else if (state.current == state.over) {            
 
-            // let type = [
-            //     { sX: 313, sY: 112 },
-            //     { sX: 360, sY: 112 },
-            //     { sX: 360, sY: 157 },
-            //     { sX: 313, sY: 157 },
-            // ];
-
-            // let  medal = 3;            
-
-            // if (this.value > 0) {
-            //     medal = 0;     // lata
-            // } else if (this.value >= 2) {
-            //     medal = 1;     // prata
-            // } else if (this.value >= 3) {
-            //     medal = 2;     // bronse
-            // } else if (this.value == 5) {
-            //     medal = 3;     // ouro
-            // }
-
-            //console.log(this.value, medal);
-
-            // SCORE VALUE
+            // TODO: SCORE VALUE
             ctx.font = "25px Teko";
-            ctx.fillText(this.value, 225, 186);
-            ctx.strokeText(this.value, 225, 186);
+            ctx.fillText(this.value, 240, 170);
+            ctx.strokeText(this.value, 240, 170);
+            ctx.textAlign = "left";
 
-            // BEST SCORE
-            ctx.fillText(this.best, 225, 228);
-            ctx.strokeText(this.best, 225, 228);
+            // TODO: BEST SCORE
+            ctx.fillText(this.best, 215, 210,);
+            ctx.strokeText(this.best, 215, 210);
 
-            // MEDAL
+            // TODO: MEDAL
             medal.update();
             medal.draw();
-            //ctx.drawImage(sprite, type[medal].sX, type[medal].sY, this.w, this.h, this.x, this.y, this.w, this.h);
         }
     },
 
     reset: function () {
         this.value = 0;
+    }
+}
+
+const bird = {
+    animation: [
+        { sX: 276, sY: 112 },
+        { sX: 276, sY: 139 },
+        { sX: 276, sY: 164 },
+        { sX: 276, sY: 139 }
+    ],
+    x: 50,
+    y: 150,
+    w: 34,
+    h: 26,
+
+    radius: 12,
+
+    frame: 0,
+
+    gravity: 0.25,
+    jump: 4.6,
+    speed: 0,
+    rotation: 0,
+
+    draw: function () {
+        let bird = this.animation[this.frame];
+
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
+        ctx.drawImage(sprite, bird.sX, bird.sY, this.w, this.h, - this.w / 2, - this.h / 2, this.w, this.h);
+
+        ctx.restore();
+    },
+
+    flap: function () {
+        this.speed = - this.jump;
+    },
+
+    update: function () {
+        // IF THE GAME STATE IS GET READY STATE, THE BIRD MUST FLAP SLOWLY
+        this.period = state.current == state.getReady ? 10 : 5;
+        // WE INCREMENT THE FRAME BY 1, EACH PERIOD
+        this.frame += frames % this.period == 0 ? 1 : 0;
+        // FRAME GOES FROM 0 To 4, THEN AGAIN TO 0
+        this.frame = this.frame % this.animation.length;
+
+        if (state.current == state.getReady) {
+            this.y = 150; // RESET POSITION OF THE BIRD AFTER GAME OVER
+            this.rotation = 0 * DEGREE;
+        } else {
+            this.speed += this.gravity;
+            this.y += this.speed;
+
+            if (this.y + this.h / 2 >= cvs.height - fg.h) {
+                this.y = cvs.height - fg.h - this.h / 2;
+                if (state.current == state.game) {
+                    state.current = state.over;
+                    //DIE.play();
+                }
+            }
+
+            // IF THE SPEED IS GREATER THAN THE JUMP MEANS THE BIRD IS FALLING DOWN
+            if (this.speed >= this.jump) {
+                this.rotation = 90 * DEGREE;
+                this.frame = 1;
+            } else {
+                this.rotation = -25 * DEGREE;
+            }
+        }
+
+    },
+    speedReset: function () {
+        this.speed = 0;
+    }
+}
+
+const getReady = {
+    sX: 0,
+    sY: 228,
+    w: 173,
+    h: 152,
+    x: cvs.width / 2 - 173 / 2,
+    y: 80,
+
+    draw: function () {
+        if (state.current == state.getReady) {
+            ctx.drawImage(sprite, this.sX, this.sY, this.w, this.h, this.x, this.y, this.w, this.h);
+        }
+    }
+
+}
+
+const gameOver = {
+    sX: 175,
+    sY: 228,
+    w: 225,
+    h: 202,
+    x: cvs.width / 2 - 225 / 2,
+    y: 90,
+
+    draw: function () {
+        if (state.current == state.over) {
+            ctx.drawImage(sprite, this.sX, this.sY, this.w, this.h, this.x, this.y, this.w, this.h);
+        }
     }
 }
 
@@ -329,6 +411,18 @@ const update = (timeStamp) => {
 
     canvasclear("#70c5ce", "#ffffff", 0, 0, 320, 480);
 
+    bg.draw();
+    pipes.draw();
+    fg.draw();
+    bird.draw();
+    getReady.draw();
+    gameOver.draw();
+    score.draw();
+    frames++;    
+    pipes.update();
+    fg.update();    
+    bird.update();
+
     Info({
         title: "FPS:",
         font: "20px Teko",
@@ -344,21 +438,6 @@ const update = (timeStamp) => {
         y: 10,
         color: '#000000'
     });
-
-    bg.draw();
-    fg.draw();
-    // bird.draw();
-    // pipes.draw();
-    // getReady.draw();
-    // gameOver.draw();
-    // score.draw();
-    frames++;
-    // bird.update();
-    fg.update();
-    // pipes.update();
-
-    state.current = state.game;
-    // SWOOSHING.play();
 };
 
 const reset = () => {
