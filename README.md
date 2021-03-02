@@ -1,4 +1,4 @@
 # FlappyBird
 >Game FlappyBird Javascript
 
-![image1.png](images/image1.png)
+![image1.png](public/images/image1.png)
